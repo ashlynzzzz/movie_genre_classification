@@ -7,7 +7,7 @@ import os
 
 movie_df = pd.DataFrame(columns=['IMDb', 'title', 'genres', 'overview', 'image'])
 
-movie_list_path = 'urls.txt'
+movie_list_path = 'data/urls.txt'
 count = 0
 urls = [line.strip() for line in open(movie_list_path, 'r')]
 num = len(urls)
@@ -64,6 +64,6 @@ for n in range(790, num):
     movie_df = pd.concat([movie_df, pd.DataFrame([movie_info], columns=movie_df.columns)], ignore_index=True)
     if count % 10 == 0:
         print("Complete", count + 790)
-        movie_df.to_csv('chinese_movies.csv', index=False)
+        movie_df.to_csv('data/chinese_movies.csv', index=False)
 
-movie_df.to_csv('chinese_movies.csv', index=False)
+movie_df.to_csv('data/chinese_movies.csv', index=False)

@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import os, argparse
 
-def ResNet(remove=False):
+def resnet50(remove=False):
     # Load pre-trained ResNet-50 model
     cpt_path = 'model_checkpoint/resnet50-19c8e357.pth'
     cpt_resnet50 = torch.load(cpt_path)
@@ -84,7 +84,7 @@ def feature_extract(df, model, preprocess, name):
 def main(params):
     df = pd.read_csv('movies.csv')
     if params.model == 'resnet50':
-        model, preprocess = ResNet(params.remove)
+        model, preprocess = resnet50(params.remove)
     elif params.model == 'vgg16':
         model, preprocess = vgg16(params.remove)
     feature_extract(df, model, preprocess, params.model)

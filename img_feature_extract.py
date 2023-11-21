@@ -15,7 +15,7 @@ def resnet50(remove=False):
 
     if remove:
     # Remove the fully connected layers (classifier)
-        resnet50 = torch.nn.Sequential(*list(resnet50.children())[:-2])
+        resnet50 = torch.nn.Sequential(*list(resnet50.children())[:-1])
 
     # Set the model to evaluation mode
     resnet50.eval()
@@ -38,7 +38,7 @@ def vgg16(remove=False):
 
     if remove:
     # Remove the fully connected layers (classifier)
-        vgg16 = torch.nn.Sequential(*list(vgg16.features.children())[:-2]) 
+        vgg16 = torch.nn.Sequential(*list(vgg16.features.children())[:-1]) 
 
     # Set the model to evaluation mode
     vgg16.eval()
@@ -50,10 +50,13 @@ def vgg16(remove=False):
     ])
     return vgg16, preprocess
 
-def feature_extract(df, model, preprocess, name):
+def feature_extract(df, model, preprocess, name, remove=False):
     image_folder = 'movie_images'
     image_files = df['id'].tolist()
-    feature_folder = 'image_features_' + name
+    if remove:
+        feature_folder = 'image_features_' + name + '_remove'
+    else:
+        feature_folder = 'image_features_' + name
     os.makedirs(feature_folder, exist_ok=True)
 
     # Process images in batches
@@ -87,7 +90,7 @@ def main(params):
         model, preprocess = resnet50(params.remove)
     elif params.model == 'vgg16':
         model, preprocess = vgg16(params.remove)
-    feature_extract(df, model, preprocess, params.model)
+    feature_extract(df, model, preprocess, params.model, params.remove)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Finetune Image Model")

@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import os, argparse
 
-def resnet50(remove=False):
+def resnet50(remove=True):
     # Load pre-trained ResNet-50 model
     cpt_path = 'model_checkpoint/resnet50-19c8e357.pth'
     cpt_resnet50 = torch.load(cpt_path)
@@ -29,7 +29,7 @@ def resnet50(remove=False):
 
     return resnet50, preprocess
 
-def vgg16(remove=False):
+def vgg16(remove=True):
     # Load pre-trained VGG-16 model
     cpt_path = 'model_checkpoint/vgg16-397923af.pth'
     cpt_vgg16 = torch.load(cpt_path)
@@ -50,7 +50,7 @@ def vgg16(remove=False):
     ])
     return vgg16, preprocess
 
-def feature_extract(df, model, preprocess, name, remove=False):
+def feature_extract(df, model, preprocess, name, remove=True):
     image_folder = 'movie_images'
     image_files = df['id'].tolist()
     if remove:
@@ -95,6 +95,6 @@ def main(params):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Finetune Image Model")
     parser.add_argument("--model", type=str, default='resnet50')
-    parser.add_argument("--remove", type=bool, default=False)
+    parser.add_argument("--remove", type=bool, default=True)
     params, unknown = parser.parse_known_args()
     main(params)

@@ -54,15 +54,15 @@ def feature_extract(df, model, preprocess, name, remove=True):
     image_folder = 'movie_images'
     image_files = df['id'].tolist()
     if remove:
-        feature_folder = 'image_features_' + name + '_remove'
+        feature_file = 'image_features_' + name + '_remove'
     else:
-        feature_folder = 'image_features_' + name
-    os.makedirs(feature_folder, exist_ok=True)
+        feature_file = 'image_features_' + name
 
     # Process images in batches
     batch_size = 1000
     features_list = []
     for i in range(0, len(image_files), batch_size):
+        print('Batch', i)
         batch_files = image_files[i:i + batch_size]
         image_batch = []
         for image_file in batch_files:
@@ -83,7 +83,7 @@ def feature_extract(df, model, preprocess, name, remove=True):
         features_np = features.squeeze().numpy()
         features_list.append(features_np)
     features_list = np.concatenate(features_list)
-    np.save(f'{feature_folder}.npy', features_list)
+    np.save(f'{feature_file}.npy', features_list)
 
 def main(params):
     df = pd.read_csv('movies.csv')

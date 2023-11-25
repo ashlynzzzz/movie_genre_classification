@@ -25,6 +25,12 @@ SEED = 595
 set_seed(SEED)
 
 
+def clean_title_chinese(text):
+    pattern = re.compile(r'\([^)]*\)')
+    text = re.sub(pattern, '', text)
+    return text
+
+
 def clean_text_chinese(text):
     characters_to_remove = ['\n', '\u3000', '<br/>']
     for char in characters_to_remove:
@@ -38,11 +44,6 @@ def clean_text_chinese(text):
 
     # remove whitespaces 
     text = ' '.join(text.split()) 
-    return text
-
-def clean_title_chinese(text):
-    pattern = re.compile(r'\([^)]*\)')
-    text = re.sub(pattern, '', text)
     return text
 
 def clean_text_english(text):
@@ -112,7 +113,7 @@ def mian():
     concatenated_df = pd.concat([df, res], axis=1)
 
     shuffled_df = concatenated_df.sample(frac=1, random_state=595)
-    shuffled_df.to_csv('movies.csv', index=False)
+    shuffled_df.to_csv('movies.csv', columns=['id', 'clean_title', 'clean_overview', 'genres_new'] + mlb.classes_.tolist(), index=False) 
 
 
 if __name__ == '__main__':

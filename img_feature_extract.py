@@ -14,7 +14,7 @@ def resnet50(remove=True):
     resnet50.load_state_dict(cpt_resnet50)
 
     if remove:
-    # Remove the fully connected layers (classifier)
+        # Remove the fully connected layers (classifier)
         resnet50 = torch.nn.Sequential(*list(resnet50.children())[:-1])
 
     # Set the model to evaluation mode
@@ -37,7 +37,7 @@ def vgg16(remove=True):
     vgg16.load_state_dict(cpt_vgg16)
 
     if remove:
-    # Remove the fully connected layers (classifier)
+        # Remove the fully connected layers (classifier)
         vgg16 = torch.nn.Sequential(*list(vgg16.features.children())[:-1]) 
 
     # Set the model to evaluation mode
@@ -61,6 +61,7 @@ def feature_extract(df, model, preprocess, name, remove=True):
 
     # Process images in batches
     batch_size = 1000
+    features_list = []
     for i in range(0, len(image_files), batch_size):
         batch_files = image_files[i:i + batch_size]
         image_batch = []
@@ -80,9 +81,9 @@ def feature_extract(df, model, preprocess, name, remove=True):
 
         # Save features
         features_np = features.squeeze().numpy()
-        features_file_path = f'{feature_folder}/{i}_features.npy'
-        with open(features_file_path, 'wb') as features_file:
-            np.save(features_file, features_np)
+        features_list.append(features_np)
+    features_list = np.concatenate(features_list)
+    np.save(f'{feature_folder}.npy', features_list)
 
 def main(params):
     df = pd.read_csv('movies.csv')

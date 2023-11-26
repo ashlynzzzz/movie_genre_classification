@@ -15,10 +15,11 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
+
 def classifier(model='OneVsRest', estimator='LogisticRegression', k=3):
     if model == 'BinaryRelevance':
         if estimator == 'LogisticRegression':
-            base = LogisticRegression()
+            base = LogisticRegression(random_state=42)
         elif estimator == 'SVM':
             base = SVC()
         elif estimator == 'GaussianNB':

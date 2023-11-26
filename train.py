@@ -15,30 +15,6 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
-
-def classifier(model='OneVsRest', estimator='LogisticRegression', k=3):
-    if model == 'BinaryRelevance':
-        if estimator == 'LogisticRegression':
-            base = LogisticRegression(random_state=42)
-        elif estimator == 'SVM':
-            base = SVC()
-        elif estimator == 'GaussianNB':
-            base = GaussianNB()
-        clf = BinaryRelevance(base)
-    elif model == 'OneVsRest':
-        if estimator == 'LogisticRegression':
-            base = LogisticRegression(solver='liblinear')
-        elif estimator == 'SVM':
-            base = SVC()
-        elif estimator == 'GaussianNB':
-            base = GaussianNB()
-        clf = OneVsRestClassifier(base)
-    elif model == 'MLkNN':
-        clf = MLkNN(k)
-
-    return clf
-
-
 def main(params):
     if params.text_feature:
         text = np.load(params.text_feature)

@@ -5,7 +5,7 @@ import argparse
 import numpy as np
 import pandas as pd
 import transformers
-from transformers import BertTokenizer, BertModel, AutoTokenizer, AutoModel, XLMRobertaModel
+from transformers import BertConfig, BertTokenizer, BertModel, AutoTokenizer, AutoModel, XLMRobertaModel
 
 
 def set_seed(seed):
@@ -21,13 +21,12 @@ device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cp
 
 
 class TextEncoder:
-    def __init__(self, model='mBERT', maxlen_title=50, maxlen_ovr=500):
-        # self.maxlen_title = maxlen_title
-        # self.maxlen_ovr = maxlen_ovr
+    def __init__(self, model='mBERT', way='merge'):
+        self.way = way
 
         if model == 'mBERT':
             self.tokenizer = BertTokenizer.from_pretrained('bert-base-multilingual-cased')
-            self.model = BertModel.from_pretrained("bert-base-multilingual-cased")
+            self.model = BertModel.from_pretrained('bert-base-multilingual-cased')
         elif model == 'LaBSE':
             self.tokenizer = AutoTokenizer.from_pretrained('sentence-transformers/LaBSE')
             self.model = AutoModel.from_pretrained('sentence-transformers/LaBSE')
@@ -38,42 +37,53 @@ class TextEncoder:
 
 
     def encode(self, df):
-        tokenized_title = self.tokenizer(df.title.values.tolist(), padding=True, truncation=True, return_tensors="pt")
-        tokenized_ovr = self.tokenizer(df.overview.values.tolist(), padding=True, truncation=True, return_tensors="pt")
-        # tokenized_title = self.tokenizer(df.title.values.tolist(), max_length=self.maxlen_title, padding='max_length', truncation=True, return_tensors="pt")
-        # tokenized_ovr = self.tokenizer(df.overview.values.tolist(), max_length=self.maxlen_ovr, padding='max_length', truncation=True, return_tensors="pt")
-        tokenized_title = {k:v.to(device) for k,v in tokenized_title.items()}
-        tokenized_ovr = {k:v.to(device) for k,v in tokenized_ovr.items()}
-        with torch.no_grad():
-            hidden_title = self.model(**tokenized_title) 
-            hidden_ovr = self.model(**tokenized_ovr)
+        if self.way == 'merge':
+            tokenized = self.tokenizer((df.clean_title + ' ' + df.clean_overview).values.tolist(), padding=True, truncation=True, return_tensors="pt")
+            tokenized = {k:v.to(device) for k,v in tokenized.items()}
+            with torch.no_grad():
+                hidden = self.model(**tokenized)
+            embedding = torch.mean(hidden.last_hidden_state, dim=1)
 
-        # Get only the [CLS] hidden states
-        cls_title = hidden_title.last_hidden_state[:,0,:]
-        cls_ovr = hidden_ovr.last_hidden_state[:,0,:]
+        elif self.way == 'overview':
+            tokenized = self.tokenizer(df.clean_overview.values.tolist(), padding=True, truncation=True, return_tensors="pt")
+            tokenized = {k:v.to(device) for k,v in tokenized.items()}
+            with torch.no_grad():
+                hidden = self.model(**tokenized)
+            embedding = torch.mean(hidden.last_hidden_state, dim=1)
 
-        # Concatenate
-        cls = torch.cat([cls_title, cls_ovr], dim=1)
-
-        return cls
+        elif self.way == 'separate':
+            tokenized_title = self.tokenizer(df.clean_title.values.tolist(), padding=True, truncation=True, return_tensors="pt")
+            tokenized_ovr = self.tokenizer(df.clean_overview.values.tolist(), padding=True, truncation=True, return_tensors="pt")
+            tokenized_title = {k:v.to(device) for k,v in tokenized_title.items()}
+            tokenized_ovr = {k:v.to(device) for k,v in tokenized_ovr.items()}
+            with torch.no_grad():
+                hidden_title = self.model(**tokenized_title) 
+                hidden_ovr = self.model(**tokenized_ovr)
+            embedding_title = torch.mean(hidden_title.last_hidden_state, dim=1)
+            embedding_ovr = torch.mean(hidden_ovr.last_hidden_state, dim=1)
+            embedding = torch.cat([embedding_title, embedding_ovr], dim=1)
+    
+        return embedding
 
 def main(params):
-    df = pd.read_csv('movies.csv')
-    encoder = TextEncoder(params.model)
+    df = pd.read_csv(params.df)
+    encoder = TextEncoder(params.model, params.way)
+    features = []
     batch_size = 1000
-    os.makedirs(params.save_path, exist_ok=True)
     for i in range(0, len(df), batch_size):
         df_batch = df.iloc[i:i+batch_size, :]
-        Xfeatures = encoder.encode(df_batch).cpu().numpy()
-        features_file_path = params.save_path + f'/{i}_features.npy'
-        with open(features_file_path, 'wb') as features_file:
-            np.save(features_file, Xfeatures)
+        features_batch = encoder.encode(df_batch).cpu().numpy()
+        features.append(features_batch)
+    Xfeatures = np.concatenate(features)
+    np.save(params.save_path + '.npy', Xfeatures)
 
     
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="Finetune Language Model")
+    parser = argparse.ArgumentParser(description="Text Feature Extraction")
 
+    parser.add_argument("--df", type=str, default='movies.csv')
     parser.add_argument("--model", type=str, default='mBERT')
+    parser.add_argument("--way", type=str, default='overview')
     parser.add_argument("--save_path", type=str, default='text_features_mBERT')
 
     params, unknown = parser.parse_known_args()

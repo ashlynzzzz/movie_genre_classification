@@ -2,6 +2,8 @@ import numpy as np
 
 
 def acc_sb(y_true, y_pred):
+    if not isinstance(y_pred, np.ndarray):
+        y_pred = y_pred.toarray()
     acc_list = []
     for i in range(y_true.shape[0]):
         set_true = set(np.where(y_true[i])[0])

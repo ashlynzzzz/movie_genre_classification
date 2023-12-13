@@ -38,7 +38,7 @@ def vgg16(remove=True):
 
     if remove:
         # Remove the fully connected layers (classifier)
-        vgg16 = torch.nn.Sequential(*list(vgg16.features.children())[:-1]) 
+        vgg16 = torch.nn.Sequential(*list(vgg16.features.children())[:-3], torch.nn.AdaptiveAvgPool2d(1)) 
 
     # Set the model to evaluation mode
     vgg16.eval()
@@ -81,6 +81,7 @@ def feature_extract(df, model, preprocess, name, remove=True):
 
         # Save features
         features_np = features.squeeze().numpy()
+        print(features_np.shape)
         features_list.append(features_np)
     features_list = np.concatenate(features_list)
     np.save(f'{feature_file}.npy', features_list)

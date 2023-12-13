@@ -16,15 +16,13 @@ warnings.filterwarnings("ignore")
 
 
 def main(params):
-    if params.text_feature:
-        text = np.load(params.text_feature)
-        print(text.shape)
-    if params.image_feature:
-        image = np.load(params.image_feature)
-        print(image.shape)
-    if params.text_feature and params.image_feature:
+    if params.text:
+        text = np.load(params.text)
+    if params.image:
+        image = np.load(params.image)
+    if params.text and params.image:
         X = np.concatenate((text, image), axis=1)
-    elif not params.text_feature:
+    elif not params.text:
         X = image
     else:
         X = text
@@ -38,7 +36,6 @@ def main(params):
     if not isinstance(y_pred, np.ndarray):
         y_pred = y_pred.toarray()
     print(params.model)
-    print(f1_score(y_test, y_pred, average="micro"))
     print('Sample-based Accuracy:', acc_sb(y_test, y_pred))
     print('Sample-based Precision:', prec_sb(y_test, y_pred))
     print('Sample-based Recall:', recall_sb(y_test, y_pred))
@@ -52,12 +49,10 @@ def main(params):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Model Training")
 
-    parser.add_argument("--text_feature", default=None)
-    parser.add_argument("--image_feature", default=None)
+    parser.add_argument("--text", default=None)
+    parser.add_argument("--image", default=None)
     parser.add_argument("--df", type=str, default='movies.csv')
     parser.add_argument("--model", type=str, default='OneVsRest')
-    parser.add_argument("--estimator", type=str, default='LogisticRegression')
-    parser.add_argument("--k", type=int, default=3)
 
     params, unknown = parser.parse_known_args()
     main(params)
